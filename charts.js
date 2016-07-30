@@ -2,45 +2,92 @@
 
 var chartsData = [];
 var chartNames = [];
+var chartRanges = [];
 var seriesNames = [];
 
-function playChart(myChartIndex){
-    console.log(chartsData[parseInt(myChartIndex)][0]);
-    var a = dtm.array(chartsData[parseInt(myChartIndex)][0]);
-    a.range([60, 97]);
-    dtm.synth().play().nn(a).dur(3);
+function playChart(){
+    var myChartIndex = parseInt(document.getElementById("selectItem").value);
+    var mySeriesIndex = parseInt(document.getElementById("selectSeries").value);
+    console.log(chartsData[myChartIndex][mySeriesIndex]);
+    var a = dtm.array(chartsData[myChartIndex][mySeriesIndex]);
+    a.range(60, 96, chartRanges[myChartIndex][0], chartRanges[myChartIndex][1]); 
+    dtm.synth().play().nn([60,96]).dur(1);
+    dtm.synth().play().nn(a).dur(3).offset(2);
+}
+
+function selectChart(event){
+    var chartIndex = parseInt(event.target.value);
+    var seriesPicker = document.getElementById("selectSeries");
+    document.getElementById("sonify").disabled = true;
+    seriesPicker.innerHTML = "<option selected='selected'>Select data series to listen</option>";
+    for(var seriesIndex = 0;seriesIndex < seriesNames[chartIndex].length;seriesIndex++){
+        seriesPicker.innerHTML += "<option value='" + String(seriesIndex) + "'>" + seriesNames[chartIndex][seriesIndex] + "</option>";
+    }
+    seriesPicker.disabled = false;
+    
+}
+
+function selectSeries(event){
+    var seriesIndex = parseInt(event.target.value);
+    console.log(seriesIndex);
+    document.getElementById("sonify").disabled = false;
 }
 
 function clickFunction(event){
-    // retrieve charts
     
+}
+    // retrieve charts
+function refreshCharts(){    
+    console.log("refreshing chartS");
     Excel.run(function (ctx) {  
         var myChartCollection = ctx.workbook.worksheets.getActiveWorksheet().charts;
         var mySeriesCollections = [];
         var myPointCollections = [];
 
-        myChartCollection.load('name');
+        //myChartCollection.load("series/items/points/value");
+        //myChartCollection.load("axes/valueAxis/maximum");
+        myChartCollection.load("name","axes");
+
 
         return ctx.sync().then(function(){
+
             for(var chartIndex = 0;chartIndex < myChartCollection.items.length;chartIndex++){
+
                 chartNames.push(myChartCollection.items[chartIndex].name);
+
+
+                //chartRanges.push([myChartCollection.items[chartIndex].axes.valueAxis.minimum,myChartCollection.items[chartIndex].axes.valueAxis.maximum]);
                 mySeriesCollections.push(myChartCollection.items[chartIndex].series);
-                mySeriesCollections[chartIndex].load('name');                
+                mySeriesCollections[chartIndex].load('name');  
+
+                myChartCollection.items[chartIndex].axes.load('valueAxis/maximum');    
+                myChartCollection.items[chartIndex].axes.load('valueAxis/minimum')
+
             }
         }).then(ctx.sync).then(function(){
             for(var chartIndex = 0;chartIndex < mySeriesCollections.length;chartIndex++){
                 seriesNames.push([]);
                 myPointCollections.push([]);
+
+                //console.log("number of series is " + mySeriesCollections[chartIndex].items.length);
+                chartRanges.push([myChartCollection.items[chartIndex].axes.valueAxis.minimum, myChartCollection.items[chartIndex].axes.valueAxis.maximum]);
+
+                
                 for(var seriesIndex = 0;seriesIndex < mySeriesCollections[chartIndex].items.length;seriesIndex++){
-                    seriesNames[chartIndex].push(mySeriesCollections[chartIndex].items[seriesIndex].name);
+                    seriesNames[chartIndex].push(String(seriesIndex + 1) + ". " + mySeriesCollections[chartIndex].items[seriesIndex].name);
                     myPointCollections[chartIndex].push(mySeriesCollections[chartIndex].items[seriesIndex].points);
                     myPointCollections[chartIndex][seriesIndex].load('value');
                 }
             }
+            console.log("ready to issue");
+
         }).then(ctx.sync).then(function(){
+            console.log("afterreception");
+            document.getElementById("selectItem").innerHTML = "<option selected='selected' disabled='disabled'>Select a chart</option>";
             for(var chartIndex = 0;chartIndex < mySeriesCollections.length;chartIndex++){
+               // console.log("max is " + myChartCollection.items[chartIndex].axes.valueAxis.maximum);
                 chartsData.push([]);
-                for(var seriesIndex = 0;seriesIndex < myPointCollections.length;seriesIndex++){
+                for(var seriesIndex = 0;seriesIndex < myPointCollections[chartIndex].length;seriesIndex++){
                     chartsData[chartIndex].push([]);
                     if(myPointCollections[chartIndex][seriesIndex]){
                         // then the series is not undefined
@@ -49,7 +96,8 @@ function clickFunction(event){
                         }
                     }
                 }
-                document.getElementById("players").innerHTML += "<button id='playchart" + String(chartIndex) + "' type=button onclick='playChart(\x22" + String(chartIndex) + "\x22);'>Play " + chartNames[chartIndex] + "</button>";                
+                console.log("adding a chart");
+                document.getElementById("selectItem").innerHTML += "<option value='" + String(chartIndex) + "'>" + chartNames[chartIndex] + "</option>";                
             }
 
             console.log(chartsData);
@@ -60,27 +108,25 @@ function clickFunction(event){
             console.log("Debug info: " + JSON.stringify(error.debugInfo));
         }
     });
-
-    event.completed();
 }
 
 (function () {
     Office.initialize = function (reason) {
-        console.log("ran in the chartsjs file");
 
-        document.getElementById("button1").onclick = clickFunction;
-        console.log("added the click handler");
-
-        Office.context.document.setSelectedDataAsync("ran in the chartsjs file");
-        /* if(getParameterByName('action') == 'taskpane'){
-            console.log("it's a task pane");      
+        if(getParameterByName('action') == 'charts'){
+            console.log("it's a charts!");
+            console.log("about to assign onchange");
+            document.getElementById("selectItem").onchange = selectChart;
+            document.getElementById("selectSeries").onchange = selectSeries;
+            document.getElementById("sonify").onclick = playChart;
+            refreshCharts();     
 
         }
         else{
             console.log("it's not a task pane");
 
         }
-        */
+        
     };
 })();
 
@@ -139,7 +185,7 @@ function insertTable2(event) {
 
 
 
-/*
+
 
 function getParameterByName(name, url) {
     if (!url) url = window.location.href;
@@ -151,6 +197,5 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-*/
 
 
