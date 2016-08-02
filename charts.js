@@ -8,19 +8,33 @@ var seriesNames = [];
 function playChart(){
     var myChartIndex = parseInt(document.getElementById("selectItem").value);
     console.log("series box value is: " + document.getElementById("selectSeries").value);
-    var mySeriesIndex = parseInt(document.getElementById("selectSeries").value);
-    console.log(chartsData[myChartIndex][mySeriesIndex]);
-    var a = dtm.array(chartsData[myChartIndex][mySeriesIndex]);
-    a.range(60, 96, chartRanges[myChartIndex][0], chartRanges[myChartIndex][1]); 
-    dtm.synth().play().nn([60,96]).dur(1);
-    dtm.synth().play().nn(a).dur(3).offset(2);
+    var seriesOptions = document.getElementById("selectSeries").options;
+	var mySpeed = parseFloat(document.getElementById("speed").value);
+	dtm.synth().play().nn([56, 104]).dur(1);
+
+	for(var i = 0;i < seriesOptions.length;i++){
+		if(seriesOptions[i].selected){
+			var mySeriesIndex = parseInt(seriesOptions[i].value);
+			var b = dtm.array(chartsData[myChartIndex][mySeriesIndex]);
+
+			b.range(56, 104, chartRanges[myChartIndex][0], chartRanges[myChartIndex][1]); 
+			if(i % 2 == 0){
+				dtm.synth().play().nn(b).dur(3/mySpeed).offset(2);
+			}
+			else{
+				dtm.synth().play().nn(b).wt([-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]).dur(3/mySpeed).offset(2);
+			}
+			
+		}
+	}
+
 }
 
 function selectChart(event){
     var chartIndex = parseInt(event.target.value);
     var seriesPicker = document.getElementById("selectSeries");
     document.getElementById("sonify").disabled = true;
-    seriesPicker.innerHTML = "<option selected='selected' disabled='disabled'>Select data series to listen</option>";
+    seriesPicker.innerHTML = "";
     for(var seriesIndex = 0;seriesIndex < seriesNames[chartIndex].length;seriesIndex++){
         seriesPicker.innerHTML += "<option value='" + String(seriesIndex) + "'>" + seriesNames[chartIndex][seriesIndex] + "</option>";
     }
@@ -34,11 +48,52 @@ function selectSeries(event){
     document.getElementById("sonify").disabled = false;
 }
 
+function playSelection(event){
+	Office.context.document.getSelectedDataAsync("matrix",function(asyncResult){
+		dtm.synth().play().nn([56, 104]).dur(1);
+		var minval = asyncResult.value[0][0];
+		var maxval = asyncResult.value[0][0];
+		for(var m = 0;m < asyncResult.value.length;m++){
+			for(var n = 0;n < asyncResult.value[m].length;n++){
+				if(asyncResult.value[m][n] > maxval){
+					maxval = asyncResult.value[m][n];
+				}
+				if(asyncResult.value[m][n] < minval){
+					minval = asyncResult.value[m][n];
+				}
+			}
+		}
+		
+		for(var i = 0;i < asyncResult.value.length;i++){
+		
+
+			var b = dtm.array(asyncResult.value[i]);
+
+			b.range(56, 104, minval, maxval); 
+			if(i % 2 == 0){
+				dtm.synth().play().nn(b).dur(3).offset(2);
+			}
+			else{
+				dtm.synth().play().nn(b).wt([-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]).dur(3).offset(2);
+			}
+			
+		
+		}
+		event.completed();
+	});
+}
+
 function clickFunction(event){
     
 }
     // retrieve charts
-function refreshCharts(){    
+function refreshCharts(){
+	chartsData = [];
+	chartNames = [];
+	chartRanges = [];
+	seriesNames = [];
+	document.getElementById("selectSeries").disabled = true;    
+	document.getElementById("selectSeries").innerHTML = "";
     console.log("refreshing chartS");
     Excel.run(function (ctx) {  
         var myChartCollection = ctx.workbook.worksheets.getActiveWorksheet().charts;
@@ -80,13 +135,13 @@ function refreshCharts(){
                     myPointCollections[chartIndex][seriesIndex].load('value');
                 }
             }
-            console.log("ready to issue");
+
 
         }).then(ctx.sync).then(function(){
-            console.log("afterreception");
+
             document.getElementById("selectItem").innerHTML = "<option selected='selected' disabled='disabled'>Select a chart</option>";
             for(var chartIndex = 0;chartIndex < mySeriesCollections.length;chartIndex++){
-               // console.log("max is " + myChartCollection.items[chartIndex].axes.valueAxis.maximum);
+
                 chartsData.push([]);
                 for(var seriesIndex = 0;seriesIndex < myPointCollections[chartIndex].length;seriesIndex++){
                     chartsData[chartIndex].push([]);
@@ -97,7 +152,6 @@ function refreshCharts(){
                         }
                     }
                 }
-                console.log("adding a chart");
                 document.getElementById("selectItem").innerHTML += "<option value='" + String(chartIndex) + "'>" + chartNames[chartIndex] + "</option>";                
             }
 
@@ -115,11 +169,10 @@ function refreshCharts(){
     Office.initialize = function (reason) {
 
         if(getParameterByName('action') == 'charts'){
-            console.log("it's a charts!");
-            console.log("about to assign onchange");
             document.getElementById("selectItem").onchange = selectChart;
             document.getElementById("selectSeries").onchange = selectSeries;
             document.getElementById("sonify").onclick = playChart;
+			document.getElementById("refresh").onclick = refreshCharts;
             refreshCharts();     
 
         }

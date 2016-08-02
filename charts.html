@@ -20,13 +20,28 @@
     
 </head>
 <body style="padding:5px;">
-    <p>
-        <select id="selectItem" autofocus></select>
+    <button id="refresh" class="ms-Button ms-Button--primary"><span class="ms-Button-label">Scan Sheet</span><span class="ms-Button-description">Clicking this button scans the sheet to detect all data.</span> </button>
+
+	<p>
+        Data Source:<br>
+		<select id="selectItem" autofocus></select>
     </p>
     <p>
-        <select multiple id="selectSeries" disabled="disabled"><option selected="selected" disabled="disabled">Select data series to listen</option></select> 
+        Data Stream:<br>
+		<select multiple id="selectSeries" disabled="disabled"><option selected="selected" disabled="disabled">Select data series to listen</option></select> 
     </p>
-    <button id="sonify" class="ms-Button ms-Button--primary" disabled><span class="ms-Button-label">Sonify data</span><span class="ms-Button-description">Description of the action this button takes</span> </button>
+	<p>
+        Playback Speed:<br>
+		<select id="speed">
+			<option value="0.25">25%</option>
+			<option value="0.5">50%</option>
+			<option value="0.75">75%</option>
+			<option selected="selected" value="1">100%</option>
+			<option value="1.5">150%</option>
+			<option value="2">200%</option>
+		</select> 
+    </p>
+    <button id="sonify" class="ms-Button ms-Button--primary" disabled><span class="ms-Button-label">Sonify data</span><span class="ms-Button-description">Play the sonified data</span> </button>
 
 </body>
 </html>
