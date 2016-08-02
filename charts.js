@@ -7,6 +7,7 @@ var seriesNames = [];
 
 function playChart(){
     var myChartIndex = parseInt(document.getElementById("selectItem").value);
+    console.log("series box value is: " + document.getElementById("selectSeries").value);
     var mySeriesIndex = parseInt(document.getElementById("selectSeries").value);
     console.log(chartsData[myChartIndex][mySeriesIndex]);
     var a = dtm.array(chartsData[myChartIndex][mySeriesIndex]);
@@ -19,7 +20,7 @@ function selectChart(event){
     var chartIndex = parseInt(event.target.value);
     var seriesPicker = document.getElementById("selectSeries");
     document.getElementById("sonify").disabled = true;
-    seriesPicker.innerHTML = "<option selected='selected'>Select data series to listen</option>";
+    seriesPicker.innerHTML = "<option selected='selected' disabled='disabled'>Select data series to listen</option>";
     for(var seriesIndex = 0;seriesIndex < seriesNames[chartIndex].length;seriesIndex++){
         seriesPicker.innerHTML += "<option value='" + String(seriesIndex) + "'>" + seriesNames[chartIndex][seriesIndex] + "</option>";
     }
