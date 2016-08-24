@@ -5,8 +5,6 @@ var chartNames = [];
 var chartRanges = [];
 var seriesNames = [];
 
-console.log("hello");
-
 function playChart(){
     var myChartIndex = parseInt(document.getElementById("selectItem").value);
     console.log("series box value is: " + document.getElementById("selectSeries").value);
@@ -167,7 +165,7 @@ function refreshCharts(){
     });
 }
 
-//(function () {
+(function () {
     Office.initialize = function (reason) {
 
         if(getParameterByName('action') == 'charts'){
@@ -184,9 +182,9 @@ function refreshCharts(){
         }
         
     };
-//})();
+})();
 
-console.log("goodbye");
+
 //Notice function needs to be in global namespace
 /*
 function insertAStock(event){
