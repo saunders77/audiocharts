@@ -7,17 +7,21 @@ var seriesNames = [];
 
 function playChart(){
     var myChartIndex = parseInt(document.getElementById("selectItem").value);
-    console.log("series box value is: " + document.getElementById("selectSeries").value);
+    console.log("series box val is: " + document.getElementById("selectSeries").value);
     var seriesOptions = document.getElementById("selectSeries").options;
-	var mySpeed = parseFloat(document.getElementById("speed").value);
-	dtm.synth().play().nn([56, 104]).dur(1);
-
+    var mySpeed = parseFloat(document.getElementById("speed").value);
+    try{
+        dtm.synth().play().nn([56, 92]).dur(1);
+    }
+    catch(err){
+        console.log("error dtm: " + err.message);
+    }
 	for(var i = 0;i < seriesOptions.length;i++){
 		if(seriesOptions[i].selected){
 			var mySeriesIndex = parseInt(seriesOptions[i].value);
 			var b = dtm.array(chartsData[myChartIndex][mySeriesIndex]);
-
-			b.range(56, 104, chartRanges[myChartIndex][0], chartRanges[myChartIndex][1]); 
+            console.log("data is " + chartsData[myChartIndex][mySeriesIndex]);
+			b.range(56, 92, chartRanges[myChartIndex][0], chartRanges[myChartIndex][1]); 
 			if(i % 2 == 0){
 				dtm.synth().play().nn(b).dur(3/mySpeed).offset(2);
 			}
